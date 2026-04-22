@@ -1,9 +1,12 @@
+@Library("SharedLib") _
 pipeline {
     agent { label "PROD" };
     stages {
         stage("Clone") {
             steps {
-                git url: 'https://github.com/Vortex1806/two-tier-flask-app-docker', branch: 'master'
+                script{
+                    clone("https://github.com/Vortex1806/two-tier-flask-app-docker", "master")
+                }
             }
         }
         stage("Build") {
@@ -18,15 +21,8 @@ pipeline {
         }
         stage("Push to docker hub") {
             steps{
-                withCredentials([usernamePassword(
-                    credentialsId:"DockerHubCred",
-                    passwordVariable: "dockerHubPassword",
-                    usernameVariable: "dockerHubUser"
-                    )
-                ]) {
-                    sh "docker login -u ${env.dockerHubUser} -p ${env.dockerHubPassword}"
-                    sh "docker image tag two-tier-flask-app ${env.dockerHubUser}/two-tier-flask-app"
-                    sh "docker push ${env.dockerHubUser}/two-tier-flask-app:latest"
+                script {
+                    docker_push("DockerHubCred", "two-tier-flask-app")
                 }
             }
         }
